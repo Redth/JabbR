@@ -14,6 +14,7 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AssemblyName>JabbR.Client.Android</AssemblyName>
+    <TargetFrameworkVersion>v4.0.3</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +32,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <DefineConstants>ANDROID</DefineConstants>
   </PropertyGroup>
@@ -42,9 +42,6 @@
     <Reference Include="Mono.Android" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\lib\Android\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AspNet.SignalR.Client.Android">
-      <HintPath>..\lib\Android\Microsoft.AspNet.SignalR.Client.Android.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -107,5 +104,11 @@
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Models\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SignalR\src\Microsoft.AspNet.SignalR.Client.Android\Microsoft.AspNet.SignalR.Client.Android.csproj">
+      <Project>{677A3843-1774-48D8-B00C-01F1151AF2BC}</Project>
+      <Name>Microsoft.AspNet.SignalR.Client.Android</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
