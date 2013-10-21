@@ -67,7 +67,7 @@ namespace JabbR.Infrastructure
                 }
 
             }
-            else if (principal.HasRequiredClaims())
+            else if (principal.HasAllClaims())
             {
                 ChatUser targetUser = null;
 
@@ -149,6 +149,11 @@ namespace JabbR.Infrastructure
             }
 
             return null;
+        }
+
+        public void ApplyRedirect(CookieApplyRedirectContext context)
+        {
+            context.Response.Redirect(context.RedirectUri);
         }
     }
 }
