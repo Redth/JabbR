@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;ANDROID</DefineConstants>
+    <DefineConstants>DEBUG;__ANDROID__</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-    <DefineConstants>ANDROID</DefineConstants>
+    <DefineConstants>__ANDROID__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -43,6 +43,8 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\lib\Android\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
@@ -52,9 +54,6 @@
     <Compile Include="..\JabbR.Client\DefaultAuthenticationProvider.cs">
       <Link>DefaultAuthenticationProvider.cs</Link>
     </Compile>
-    <Compile Include="..\JabbR.Client\HttpHelper.cs">
-      <Link>HttpHelper.cs</Link>
-    </Compile>
     <Compile Include="..\JabbR.Client\IAuthenticationProvider.cs">
       <Link>IAuthenticationProvider.cs</Link>
     </Compile>
@@ -63,9 +62,6 @@
     </Compile>
     <Compile Include="..\JabbR.Client\JabbRClient.cs">
       <Link>JabbRClient.cs</Link>
-    </Compile>
-    <Compile Include="..\JabbR.Client\StreamExtensions.cs">
-      <Link>StreamExtensions.cs</Link>
     </Compile>
     <Compile Include="..\JabbR.Client\TaskAsyncHelper.cs">
       <Link>TaskAsyncHelper.cs</Link>
