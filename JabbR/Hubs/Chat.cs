@@ -25,13 +25,15 @@ namespace JabbR
         private readonly ICache _cache;
         private readonly ContentProviderProcessor _resourceProcessor;
         private readonly ILogger _logger;
+        private readonly ApplicationSettings _settings;
 
         public Chat(ContentProviderProcessor resourceProcessor,
                     IChatService service,
                     IRecentMessageCache recentMessageCache,
                     IJabbrRepository repository,
                     ICache cache,
-                    ILogger logger)
+                    ILogger logger,
+                    ApplicationSettings settings)
         {
             _resourceProcessor = resourceProcessor;
             _service = service;
@@ -39,6 +41,7 @@ namespace JabbR
             _repository = repository;
             _cache = cache;
             _logger = logger;
+            _settings = settings;
         }
 
         private string UserAgent
@@ -152,6 +155,12 @@ namespace JabbR
         public bool Send(ClientMessage clientMessage)
         {
             CheckStatus();
+
+            // reject it if it's too long
+            if (_settings.MaxMessageLength > 0 && clientMessage.Content.Length > _settings.MaxMessageLength)
+            {
+                throw new HubException(String.Format(LanguageResources.SendMessageTooLong, _settings.MaxMessageLength));
+            }
 
             // See if this is a valid command (starts with /)
             if (TryHandleCommand(clientMessage.Content, clientMessage.Room))
@@ -984,14 +993,14 @@ namespace JabbR
         void INotificationService.NudgeUser(ChatUser user, ChatUser targetUser)
         {
             // Send a nudge message to the sender and the sendee
-            Clients.User(targetUser.Id).nudge(user.Name, targetUser.Name);
+            Clients.User(targetUser.Id).nudge(user.Name, targetUser.Name, null);
 
-            Clients.User(user.Id).nudge(user.Name, targetUser.Name);
+            Clients.User(user.Id).nudge(user.Name, targetUser.Name, null);
         }
 
         void INotificationService.NudgeRoom(ChatRoom room, ChatUser user)
         {
-            Clients.Group(room.Name).nudge(user.Name);
+            Clients.Group(room.Name).nudge(user.Name, null, room.Name);
         }
 
         void INotificationService.LeaveRoom(ChatUser user, ChatRoom room)

@@ -6,14 +6,14 @@ namespace JabbR.Models.Migrations
     using System.Data.Entity.Migrations.Infrastructure;
     using System.Resources;
     
-    [GeneratedCode("EntityFramework.Migrations", "6.1.0-alpha1-21015")]
-    public sealed partial class AddPrecisionToDateTimeOffsets : IMigrationMetadata
+    [GeneratedCode("EntityFramework.Migrations", "6.0.1-21010")]
+    public sealed partial class AddPrecision : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(AddPrecisionToDateTimeOffsets));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(AddPrecision));
         
         string IMigrationMetadata.Id
         {
-            get { return "201310160533083_test"; }
+            get { return "201310240539050_AddPrecision"; }
         }
         
         string IMigrationMetadata.Source

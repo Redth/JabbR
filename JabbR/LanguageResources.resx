@@ -886,10 +886,10 @@ Use ? or type /? to display the FAQ and list of commands.</value>
     <value>{0} (Currently {1}) is not in any rooms.</value>
   </data>
   <data name="Chat_UserNudgedRoom" xml:space="preserve">
-    <value>*{0} nudged the room.</value>
+    <value>*{0} nudged room {1}.</value>
   </data>
   <data name="Chat_UserNudgedUser" xml:space="preserve">
-    <value>*{0} nudged {1}</value>
+    <value>*{0} nudged {1}.</value>
   </data>
   <data name="Chat_UserNudgedYou" xml:space="preserve">
     <value>*{0} nudged you.</value>
@@ -1155,5 +1155,14 @@ Use ? or type /? to display the FAQ and list of commands.</value>
   </data>
   <data name="Chat_YouAreAfkNote" xml:space="preserve">
     <value>You have gone AFK, with the message "{0}".</value>
+  </data>
+  <data name="Administration_MaxMessageLength" xml:space="preserve">
+    <value>Max Message Length</value>
+  </data>
+  <data name="Administration_MaxMessageLengthHelp" xml:space="preserve">
+    <value>Max Message Length being set to less than 1 will result in no limit being enforced.</value>
+  </data>
+  <data name="SendMessageTooLong" xml:space="preserve">
+    <value>You cannot post this message. It is too long.</value>
   </data>
 </root>

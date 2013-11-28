@@ -3,7 +3,7 @@ namespace JabbR.Models.Migrations
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class AddPrecisionToDateTimeOffsets : DbMigration
+    public partial class AddPrecision : DbMigration
     {
         public override void Up()
         {
