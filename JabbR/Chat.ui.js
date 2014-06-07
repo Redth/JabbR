@@ -595,19 +595,44 @@
             return;
         }
 
-        var msg = $.trim($newMessage.val());
+        var msg = $.trim($newMessage.val()),
+            room = getCurrentRoomElements();
 
         focus = true;
 
         if (msg) {
-            $ui.trigger(ui.events.sendMessage, [msg]);
+            if (ui.isCommand(msg)) {
+                if (!ui.confirmCommand(msg)) {
+                    $ui.trigger(ui.events.sendMessage, [msg, null, true]);
+                }
+            } else {
+                // if you're in the lobby, you can't send mesages (only commands)
+                if (room.isLobby()) {
+                    ui.addErrorToActiveRoom(utility.getLanguageResource('Chat_CannotSendLobby'));
+                    return false;
+                }
+
+                // Added the message to the ui first
+                var viewModel = {
+                    name: ui.getUserName(),
+                    hash: ui.getUserHash(),
+                    message: ui.processContent(msg),
+                    id: utility.newId(),
+                    date: new Date(),
+                    highlight: '',
+                    isMine: true
+                };
+
+                ui.addChatMessage(viewModel, room.getName());
+
+                $ui.trigger(ui.events.sendMessage, [msg, viewModel.id, false]);
+            }
         }
 
         $newMessage.val('');
         $newMessage.focus();
 
         // always scroll to bottom after new message sent
-        var room = getCurrentRoomElements();
         room.scrollToBottom();
         room.removeSeparator();
     }
@@ -794,7 +819,8 @@
                 commandhelp: $('#command-help-template'),
                 multiline: $('#multiline-content-template'),
                 lobbyroom: $('#new-lobby-room-template'),
-                otherlobbyroom: $('#new-other-lobby-room-template')
+                otherlobbyroom: $('#new-other-lobby-room-template'),
+                commandConfirm: $('#command-confirm-template')
             };
             $reloadMessageNotification = $('#reloadMessageNotification');
             $fileUploadButton = $('.upload-button');
@@ -1383,10 +1409,13 @@
                     room.messages.hide();
                 }
 
+                ui.toggleDownloadButton(room.isLocked());
+
                 ui.toggleMessageSection(room.isClosed());
 
                 $ui.trigger(ui.events.activeRoomChanged, [roomName]);
                 triggerFocus();
+                setRoomLoading(false);
                 return true;
             }
 
@@ -1396,6 +1425,8 @@
             var room = getRoomElements(roomName);
 
             room.setLocked();
+
+            ui.toggleDownloadButton(true);
         },
         setRoomClosed: function (roomName) {
             var room = getRoomElements(roomName);
@@ -1573,7 +1604,7 @@
         addUser: function (userViewModel, roomName) {
             var room = getRoomElements(roomName),
                 $user = null,
-                $userMessages = room.messages.find(getUserClassName(userViewModel.name));
+                $userMessages = room.messages.find('.message-user' + getUserClassName(userViewModel.name));
 
             // Remove all users that are being removed
             room.users.find('.removing').remove();
@@ -1590,7 +1621,7 @@
             $user.data('owner', userViewModel.owner);
             $user.data('admin', userViewModel.admin);
 
-            $userMessages.find('.user').removeClass('offline active inactive absent present').addClass('active present');
+            $userMessages.removeClass('offline active inactive absent present').addClass('active present');
 
             room.addUser(userViewModel, $user);
             updateNote(userViewModel, $user);
@@ -1599,34 +1630,37 @@
             return true;
         },
         setUserActivity: function (userViewModel) {
-            var $user = $('.users').find(getUserClassName(userViewModel.name)),
-                $inactiveSince = $user.find('.inactive-since'),
-                $userMessages = $('.messages').find(getUserClassName(userViewModel.name));
+            var $user = $('.users .user' + getUserClassName(userViewModel.name)),
+                $inactiveSince = $user.find('.inactive-since');
 
             if (userViewModel.active === true && userViewModel.afk === false) {
                 if ($user.hasClass('inactive')) {
                     $user.removeClass('inactive');
                     $inactiveSince.livestamp('destroy');
                 }
-                
-                $userMessages.find('.user').removeClass('offline active inactive').addClass('active');
+
+                $('.message-user' + getUserClassName(userViewModel.name))
+                    .removeClass('offline inactive')
+                    .addClass('active');
             } else {
                 if (!$user.hasClass('inactive')) {
                     $user.addClass('inactive');
+                    
+                    $('.message-user' + getUserClassName(userViewModel.name))
+                        .removeClass('offline active')
+                        .addClass('inactive');
                 }
 
                 if (!$inactiveSince.html()) {
                     $inactiveSince.livestamp(userViewModel.lastActive);
                 }
-                
-                $userMessages.find('.user').removeClass('offline active inactive').addClass('inactive');
             }
 
             updateNote(userViewModel, $user);
         },
         setUserActive: function ($user) {
             var $inactiveSince = $user.find('.inactive-since'),
-                $userMessages = $('.messages').find(getUserClassName($user.data('name')));
+                $userMessages = $('.message-user' + getUserClassName($user.data('name')));
             
             if ($user.data('active') === true) {
                 return false;
@@ -1638,12 +1672,12 @@
                 $inactiveSince.livestamp('destroy');
             }
             
-            $userMessages.find('.user').removeClass('offline active inactive').addClass('active');
+            $userMessages.removeClass('offline active inactive').addClass('active');
 
             return true;
         },
         setUserInActive: function ($user) {
-            var $userMessages = $('.messages').find(getUserClassName($user.data('name'))),
+            var $userMessages = $('.message-user' + getUserClassName($user.data('name'))),
                 $inactiveSince = $user.find('.inactive-since');
             
             if ($user.data('active') === false) {
@@ -1657,7 +1691,7 @@
                 $inactiveSince.livestamp(new Date());
             }
             
-            $userMessages.find('.user').removeClass('offline active inactive').addClass('inactive');
+            $userMessages.removeClass('offline active inactive').addClass('inactive');
             
             return true;
         },
@@ -2064,11 +2098,20 @@
         getCommands: function () {
             return ui.commands || [];
         },
+        getCommand: function (name) {
+            return !ui.commandsLookup ? null : ui.commandsLookup[name];
+        },
         setCommands: function (commands) {
             ui.commands = commands.sort(function(a, b) {
                 return a.Name.toString().toUpperCase().localeCompare(b.Name.toString().toUpperCase());
             });
-            
+
+            ui.commandsLookup = {};
+            for (var i = 0; i < commands.length; ++i) {
+                var cmd = commands[i];
+                ui.commandsLookup[cmd.Name] = cmd;
+            }
+
             $globalCmdHelp.empty();
             $roomCmdHelp.empty();
             $userCmdHelp.empty();
@@ -2089,6 +2132,39 @@
                         break;
                 }
             });
+        },
+        isCommand: function (msg) {
+            if (msg[0] === '/') {
+                var parts = msg.substr(1).split(' ');
+                if (parts.length > 0) {
+                    var cmd = ui.getCommand(parts[0].toLowerCase());
+                    if (cmd) {
+                        return cmd.Name;
+                    }
+                }
+            }
+            return null;
+        },
+        confirmCommand: function (msg) {
+            var commandName = ui.isCommand(msg),
+                command = ui.getCommand(commandName);
+
+            if (command && command.ConfirmMessage !== null) {
+                var $dialog = templates.commandConfirm.tmpl(command).appendTo('#dialog-container').modal()
+                        .on('hidden.bs.modal', function () {
+                            $dialog.remove();
+                        })
+                        .on('click', 'a.btn', function () {
+                            if ($(this).is('.btn-danger')) {
+                                $ui.trigger(ui.events.sendMessage, [msg, null, true]);
+                            }
+
+                            $dialog.modal('hide');
+                        });
+                return true;
+            } else {
+                return false;
+            }
         },
         setInitialized: function (roomName) {
             var room = roomName ? getRoomElements(roomName) : getCurrentRoomElements();
@@ -2146,6 +2222,16 @@
                 toast.toastMessage(message, roomName);
             }
         },
+        nudge: function (message) {
+            if (anyRoomPreference('hasSound', true) === true) {
+                ui.notify(true);
+            }
+            
+            if (focus === false && anyRoomPreference('canToast', true) === true) {
+                // Only toast if there's no focus
+                ui.toast(message, true);
+            }
+        },
         setUserName: function (name) {
             ui.name = name;
         },
@@ -2160,6 +2246,12 @@
         },
         getUserName: function () {
             return ui.name;
+        },
+        getUserHash: function () {
+            return ui.userHash;
+        },
+        setUserHash: function (hash) {
+            ui.userHash = hash;
         },
         showDisconnectUI: function () {
             $disconnectDialog.modal();
@@ -2318,6 +2410,15 @@
                 $fileUploadButton.removeAttr('disabled');
                 $hiddenFile.attr('disabled', '');
                 $hiddenFile.removeAttr('disabled');
+            }
+        },
+        toggleDownloadButton: function(disabled) {
+            if (disabled) {
+                $downloadIcon.addClass("off");
+                $downloadIcon.attr("title", "download messages disabled for private rooms");
+            } else {
+                $downloadIcon.removeClass("off");
+                $downloadIcon.attr("title", "download messages");
             }
         },
         closeRoom: function (roomName) {
